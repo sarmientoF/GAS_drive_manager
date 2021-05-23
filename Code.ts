@@ -1,4 +1,4 @@
-const spreadName = 'Google_GAS_application_spread_0118c4ee'
+const spreadName = 'google-visitor-manager'
 const spreadId = findFile()
 console.log('🚀🚀', spreadId)
 
@@ -58,7 +58,6 @@ function getViewers(fileId: string) {
     })
 }
 
-
 function onOpen() {
     SpreadsheetApp.getUi()
         .createMenu('Picker')
@@ -86,15 +85,12 @@ function doGet() {
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
 }
 
-
-
 function modifySpread(contents: string[], id: string = spreadId) {
     console.log('🚀 modify Spread', contents)
 
     var file = SpreadsheetApp.openById(id)
     file.appendRow(contents)
 }
-
 
 const customMessage = (
     extraMessage: string,
@@ -103,7 +99,7 @@ const customMessage = (
     version: number = 0
 ) => {
     var verString = version == 0 ? '' : `_Ver${version}`
-    return `ProCube作業の作業報告書を送ります。
+    return `DriveManagerの作業報告書を送ります。
     Filename: ${fileName}${verString}。
     ${extraMessage}。
     このファイルは${expiration}には削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。`
