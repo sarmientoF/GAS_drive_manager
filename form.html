@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html >
-    <meta charset="UTF-8">
+<html lang="jp">
+    <meta charset="UTF-8" />
 
     <head>
+        <title></title>
         <base target="_top" />
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+        <link
+            rel="stylesheet"
+            href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"
+        />
 
         <style>
             .content {
@@ -18,10 +22,10 @@
                 margin: auto;
                 margin-top: 20px;
             }
-            input[type="text"],
-            input[type="file"],
-            input[type="date"],
-            input[type="email"],
+            input[type='text'],
+            input[type='file'],
+            input[type='date'],
+            input[type='email'],
             textarea,
             select {
                 width: 100%;
@@ -37,8 +41,7 @@
                 pointer-events: none;
             }
 
-
-            input[type="submit"] {
+            input[type='submit'] {
                 width: 100%;
                 background-color: #4caf50;
                 color: white;
@@ -49,38 +52,104 @@
                 cursor: pointer;
             }
 
-            input[type="submit"]:hover {
+            input[type='submit']:hover {
                 background-color: #45a049;
             }
 
+            input[type='submit']:disabled {
+                border: 1px solid #999999;
+                background-color: #cccccc;
+                color: #666666;
+            }
             div {
                 border-radius: 5px;
                 background-color: #ffffff;
                 padding: 20px;
             }
 
-            textarea:read-only{
+            textarea:read-only {
                 background-color: #ccc;
                 pointer-events: none;
             }
 
+            .spread-text {
+                display: block;
+                text-align: center;
+            }
+            /* Spinner Style */
+            .centered {
+                text-align: center;
+            }
+            .loading-text {
+                width: 90px;
+                position: absolute;
+                top: calc(50% - 15px);
+                left: calc(50% - 45px);
+                text-align: center;
+                background-color: transparent;
+            }
+
+            .spinner.loading {
+                /* display: none; */
+                padding: 50px;
+                text-align: center;
+            }
+
+            .loading-text {
+                position: absolute;
+                top: calc(50% - 0px);
+                left: calc(50% - 35px);
+                text-align: center;
+            }
+
+            .spinner.loading:before {
+                content: '';
+                height: 150px;
+                width: 150px;
+                margin: -15px auto auto -15px;
+                position: absolute;
+                top: calc(50% - 45px);
+                left: calc(50% - 45px);
+                border-width: 14px;
+                border-style: solid;
+                border-color: #2180c0 #ccc #ccc;
+                border-radius: 100%;
+                animation: rotation 0.7s infinite linear;
+            }
+            /* Safari */
+            @-webkit-keyframes rotation {
+                0% {
+                    -webkit-transform: rotate(0deg);
+                }
+                100% {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+
+            @keyframes rotation {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
         </style>
         <script>
             // IMPORTANT: Replace the value for DEVELOPER_KEY with the API key obtained
             // from the Google Developers Console.
-            var DEVELOPER_KEY = "AIzaSyA8yweMQ0HYnC8vYKSCYtgESsvwjXTPrBY";
-            var DIALOG_DIMENSIONS = { width: 600, height: 425 };
-            var pickerApiLoaded = false;
+            var DIALOG_DIMENSIONS = { width: 600, height: 425 }
+            var pickerApiLoaded = false
 
             /**
              * Loads the Google Picker API.
              */
             function onApiLoad() {
-                gapi.load("picker", {
+                gapi.load('picker', {
                     callback: function () {
-                        pickerApiLoaded = true;
+                        pickerApiLoaded = true
                     },
-                });
+                })
             }
 
             /**
@@ -94,186 +163,281 @@
                 google.script.run
                     .withSuccessHandler(createPicker)
                     .withFailureHandler(showError)
-                    .getOAuthToken();
+                    .getOAuthToken()
             }
 
-            function createPicker(token) {
-                if (pickerApiLoaded && token) {
+            function createPicker(tokens) {
+                if (pickerApiLoaded && tokens[0]) {
                     var DisplayView = new google.picker.DocsView()
                         .setIncludeFolders(true)
-                        .setSelectFolderEnabled(true);
-                        
+                        .setSelectFolderEnabled(true)
+                        .setParent('root')
+
                     var picker = new google.picker.PickerBuilder()
                         .addView(DisplayView)
                         .enableFeature(
                             google.picker.Feature.MULTISELECT_ENABLED
                         )
                         .hideTitleBar()
-                        .setOAuthToken(token)
-                        .setDeveloperKey(DEVELOPER_KEY)
+                        .setOAuthToken(tokens[0])
+                        .setDeveloperKey(tokens[1])
                         .setCallback(pickerCallback)
                         .setOrigin(google.script.host.origin)
                         .setSize(
                             DIALOG_DIMENSIONS.width - 2,
                             DIALOG_DIMENSIONS.height - 2
                         )
-                        .build();
-                    picker.setVisible(true);
+                        .build()
+                    picker.setVisible(true)
                 } else {
-                    showError("Unable to load the file picker.");
+                    showError('Unable to load the file picker.')
                 }
             }
 
             function pickerCallback(data) {
-                var action = data[google.picker.Response.ACTION];
+                var action = data[google.picker.Response.ACTION]
                 if (action == google.picker.Action.PICKED) {
-                    var out = []
-                    for (var index = 0; index < data[google.picker.Response.DOCUMENTS].length; index++) {
-                        var doc = data[google.picker.Response.DOCUMENTS][index];
-                        var id = doc[google.picker.Document.ID];
-                        out.push(id)
+                    var names = []
+                    var ids = []
+                    for (
+                        var index = 0;
+                        index < data[google.picker.Response.DOCUMENTS].length;
+                        index++
+                    ) {
+                        var doc = data[google.picker.Response.DOCUMENTS][index]
+                        var id = doc[google.picker.Document.ID]
+                        var name = doc[google.picker.Document.NAME]
+                        names.push(name)
+                        ids.push(id)
                     }
-                    document.getElementById("result").value = out.toString()
+                    document.getElementById('result').value = names.toString()
+                    document.getElementById('result_ids').value = ids.toString()
                 } else if (action == google.picker.Action.CANCEL) {
                     //     "Picker canceled.";
                 }
             }
 
             function showError(message) {
-                document.getElementById("result").innerHTML =
-                    "Error: " + message;
+                document.getElementById('result').innerHTML =
+                    'Error: ' + message
             }
         </script>
     </head>
     <body class="content">
         <div>
-            <form class="form" id="form" enctype="multipart/form-data">
-
-                <label for="fname">ファイル</label>
-                <input
-                    type="button"
-                    value="ファイルを選択"
-                    onclick="getOAuthToken()"
-                ></input>
-                <input id="result" type="text" name="fileId" placeholder="ファイルID" required data-readonly></input>
-    
-                <label for="fname">ファイルダウンロードの有効期</label>
-    
-                <input type="text" name="expiration" id="datepicker" required placeholder="日付を選択してください"/>
-    
-                <label for="fname">本文</label>
-                <textarea name="message_top" rows="2" cols="10" readonly>DriveManagerの作業報告書を送ります。</textarea>
-                <textarea name="message" rows="2" cols="10" required placeholder="本文"></textarea>
-                <textarea id="message_bot" rows="2" cols="10" readonly>このファイルはyyyy-mm-ddには削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。</textarea>
-
-                <label for="fname">送信先メールリスト</label>
-                <input
-                    type="email"
-                    class="email"
-                    name="array[]"
-                    value="sarmiento.f.aa@gmail.com"
-                    placeholder="InsetEmail"
-                    required
-                />
-                <input type="button" id="Add" value="追加" onclick="AddEmail()" />
-                <input
-                    type="button"
-                    id="Remove"
-                    value="消去"
-                    onclick="RemoveEmail()"
-                />
-    
-                <input type="submit" class="submit" value="送信" />
-            </form>
+            <div id="loader" class="spinner loading loader">
+                <div class="loading-text">Loading ...</div>
+            </div>
         </div>
+        <form class="form" id="form" enctype="multipart/form-data">
+            <label for="fname">ファイル</label>
+            <input
+                type="button"
+                value="ファイルを選択"
+                onclick="getOAuthToken()"
+            />
 
-        <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
-        <script src="//code.jquery.com/jquery-1.8.3.js"></script>
-        <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1/i18n/jquery.ui.datepicker-ja.min.js"></script>
-        <!-- <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
-        <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/i18n/jquery.ui.datepicker-ja.min.js"></script> -->
+            <textarea
+                id="result"
+                name="fileName"
+                rows="2"
+                cols="10"
+                placeholder="ファイル名"
+                required
+            ></textarea>
 
-        <script>
-            $(function() {
-                const today = new Date()
-                const tomorrow = new Date(today)
-                
-                tomorrow.setDate(tomorrow.getDate() + 1)
-              $( "#datepicker" ).datepicker({
-                    minDate: tomorrow,
-              });
+            <input
+                id="result_ids"
+                type="hidden"
+                name="fileId"
+                placeholder="ファイルID"
+                required
+                data-readonly
+            />
 
-              $( "#datepicker" ).change(function(){
-                  console.log("Hola");
+            <label for="fname">ファイルダウンロードの有効期限</label>
 
-                  $("#message_bot").val("このファイルは" + $( "#datepicker" ).val() +"には削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。")
+            <input
+                type="text"
+                name="expiration"
+                id="datepicker"
+                required
+                placeholder="日付を選択してください"
+            />
 
-              })
-            }
-            )
-        </script>
-          
-        <script src="//ajax.googleapis./ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        <script type="text/javascript">
+            <label for="fname">本文</label>
 
-            
-            var emails = 0;
-            var maxEmails = 5;
+            <textarea
+                name="message"
+                rows="2"
+                cols="10"
+                required
+                placeholder="本文"
+            >
+Hola</textarea
+            >
+            <textarea id="message_bot" rows="2" cols="10" readonly>
+このファイルはyyyy-mm-ddには削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。</textarea
+            >
 
-            var form = document.getElementById("form");
-            var file = document.getElementById("imageFile");
-            var date = document.getElementById("datepicker");
-            var message = document.getElementById("message");
-            var message_bot = document.getElementById("message_bot");
-            var inputs = document.getElementsByName("array[]");
-            var addBtn = document.getElementById("Add");
+            <label for="fname">送信先メールリスト</label>
+            <input
+                type="email"
+                class="email"
+                name="array[]"
+                value="sarmiento.f.aa@gmail.com"
+                placeholder="Insert an email"
+                required
+            />
+            <input type="button" id="Add" value="追加" onclick="AddEmail()" />
+            <input
+                type="button"
+                id="Remove"
+                value="消去"
+                onclick="RemoveEmail()"
+            />
 
-
-            (function () {
-                function handleForm(event) {
-                    event.preventDefault();
-                    return Submit()
-
-                }
-                form.addEventListener("submit", handleForm);
-
-                for (var i = 0; i < emails; i++) {
-                    var node = document.createElement("input");
-                    node.type = "email";
-                    node.name = "array[]";
-                    node.placeholder = "Enter your email";
-                    node.required = true;
-                    form.insertBefore(node, addBtn);
-                }
-            })();
-
-            function AddEmail() {
-                if (emails < maxEmails) {
-                    var node = document.createElement("input");
-                    node.type = "email";
-                    node.name = "array[]";
-                    node.placeholder = "Enter your email";
-                    node.required = true;
-                    form.insertBefore(node, addBtn);
-                    emails += 1;
-                }
-            }
-
-            function RemoveEmail() {
-                if (inputs.length > 1) {
-                    form.removeChild(inputs[inputs.length - 1]);
-                    emails -= 1;
-                }
-            }
-            function Submit() {
-                if (confirm("ファイルを送信してもよろしいですか？")) {
-                    google.script.run.uploadFromDrive(form);
-                    return true;
-                }
-                return false;
-            }
-        </script>
+            <input type="submit" id="submit" class="submit" value="送信" />
+        </form>
+        <a href="/" target="_blank" id="spread_ref" class="spread-text"></a>
     </body>
+    <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="//code.jquery.com/jquery-1.8.3.js"></script>
+    <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1/i18n/jquery.ui.datepicker-ja.min.js"></script>
+
+    <script lang="php">
+        $(function() {
+            const today = new Date()
+            const tomorrow = new Date(today)
+
+            tomorrow.setDate(tomorrow.getDate() + 1)
+          $( "#datepicker" ).datepicker({
+                minDate: tomorrow,
+          });
+
+          $( "#datepicker" ).change(function(){
+
+              $("#message_bot").val("このファイルは" + $( "#datepicker" ).val() +"には削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。")
+
+          })
+        }
+        )
+    </script>
+
+    <script src="//ajax.googleapis./ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        var emails = 0
+        var maxEmails = 5
+
+        var form = document.getElementById('form')
+        var file = document.getElementById('imageFile')
+        var date = document.getElementById('datepicker')
+        var message = document.getElementById('message')
+        var message_bot = document.getElementById('message_bot')
+        var inputs = document.getElementsByName('array[]')
+        var addBtn = document.getElementById('Add')
+        var submitBtn = document.getElementById('submit')
+        var spreadRef = document.getElementById('spread_ref')
+
+        ;(function () {
+            function handleForm(event) {
+                event.preventDefault()
+                return Submit()
+            }
+            form.addEventListener('submit', handleForm)
+
+            for (var i = 0; i < emails; i++) {
+                var node = document.createElement('input')
+                node.type = 'email'
+                node.name = 'array[]'
+                node.placeholder = 'Insert an email'
+                node.required = true
+                form.insertBefore(node, addBtn)
+            }
+        })()
+
+        function AddEmail() {
+            if (emails < maxEmails) {
+                var node = document.createElement('input')
+                node.type = 'email'
+                node.name = 'array[]'
+                node.placeholder = 'Insert an email'
+                node.required = true
+                form.insertBefore(node, addBtn)
+                emails += 1
+            }
+        }
+
+        function RemoveEmail() {
+            if (inputs.length > 1) {
+                form.removeChild(inputs[inputs.length - 1])
+                emails -= 1
+            }
+        }
+        function Submit() {
+            Swal.fire({
+                text: 'ファイルを送信してもよろしいですか？',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    setVisible('.form', false)
+                    setVisible('.loader', true)
+                    google.script.run
+                        .withSuccessHandler(() => {
+                            google.script.run
+                                .withSuccessHandler((spreadURL) => {
+                                    setVisible('.form', true)
+                                    setVisible('.loader', false)
+                                    submitBtn.disabled = true
+                                    submitBtn.value = '送信が完了しました'
+                                    spreadRef.innerHTML =
+                                        '管理スプレッドシートへ'
+                                    spreadRef.href = spreadURL
+
+                                    Swal.fire({
+                                        title: '送信が完了しました!',
+                                        text: '管理スプレッドシートへ?',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#3085d6',
+                                        cancelButtonColor: '#d33',
+                                        confirmButtonText: 'Yes',
+                                        cancelButtonText: 'No',
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            window.open(spreadURL, '_blank')
+                                        }
+                                    })
+                                })
+                                .withFailureHandler(() => {
+                                    Swal.fire('Failure: getSpreadsheetURL!')
+                                })
+                                .getSpreadsheetURL()
+                        })
+                        .withFailureHandler(() => {
+                            setVisible('.form', true)
+                            setVisible('.loader', false)
+                            Swal.fire('Failure: uploadFromDrive!')
+                        })
+                        .uploadFromDrive(form)
+                    return true
+                }
+            })
+            return false
+        }
+
+        const setVisible = (elementOrSelector, visible) =>
+            ((typeof elementOrSelector === 'string'
+                ? document.querySelector(elementOrSelector)
+                : elementOrSelector
+            ).style.display = visible ? 'block' : 'none')
+
+        setVisible('.loader', false)
+        setVisible('.form', true)
+    </script>
 </html>

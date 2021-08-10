@@ -99,7 +99,7 @@ const customMessage = (
     version: number = 0
 ) => {
     var verString = version == 0 ? '' : `_Ver${version}`
-    return `DriveManagerの作業報告書を送ります。
+    return `ProCube作業の作業報告書を送ります。
     Filename: ${fileName}${verString}。
     ${extraMessage}。
     このファイルは${expiration}には削除しますので、必要に応じてそれまでにダウンロードいただくようお願いします。`
